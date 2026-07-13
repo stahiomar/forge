@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+
+    container_name: forge-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: forge
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: forge
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
