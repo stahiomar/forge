@@ -21,3 +21,6 @@ staticfiles/
 
 # Logs
 *.log
+
+# k8s
+backend-secret.yaml
