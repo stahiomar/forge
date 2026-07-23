@@ -23,6 +23,13 @@ jobs:
           pip install -r backend/requirements.txt
 
       - name: Django system check
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          #DEBUG: "True"
+          #DB_HOST: postgres
+          #DB_PORT: "5432"
+          #DB_NAME: forge
+          #ALLOWED_HOSTS: "localhost,127.0.0.1,forge.local"
         run: |
           cd backend
           python manage.py check
