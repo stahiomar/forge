@@ -17,6 +17,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
         run: |
@@ -25,11 +27,6 @@ jobs:
       - name: Django system check
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          #DEBUG: "True"
-          #DB_HOST: postgres
-          #DB_PORT: "5432"
-          #DB_NAME: forge
-          #ALLOWED_HOSTS: "localhost,127.0.0.1,forge.local"
         run: |
           cd backend
           python manage.py check
