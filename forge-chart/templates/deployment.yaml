@@ -20,9 +20,9 @@ spec:
       containers:
         - name: backend
 
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "omarstahii/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-config
