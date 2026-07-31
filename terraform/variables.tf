@@ -1,15 +1,29 @@
 variable "aws_region" {
-  type = string
+  description = "AWS region where resources will be created"
+  type        = string
 }
 
-variable "aws_region" {}
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+}
 
-variable "environment" {}
+variable "vpc_name" {
+  description = "Base name of the VPC"
+  type        = string
+}
 
-variable "vpc_name" {}
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
 
-variable "vpc_cidr" {}
+variable "public_subnet_cidr" {
+  description = "CIDR block for the public subnet"
+  type        = string
+}
 
-variable "public_subnet_cidr" {}
-
-variable "private_subnet_cidr" {}
+variable "private_subnet_cidr" {
+  description = "CIDR block for the private subnet"
+  type        = string
+}
