@@ -56,7 +56,6 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
 
   # That one means who initiates the connection
   cidr_ipv4 = "0.0.0.0/0"
-
 }
 
 resource "aws_vpc_security_group_ingress_rule" "backend_from_lb" {
@@ -99,4 +98,44 @@ resource "aws_vpc_security_group_ingress_rule" "postgres_from_backend" {
   
   # That one means who initiates the connection, in this case the backend
   referenced_security_group_id = aws_security_group.backend.id
+}
+
+# Egress rules
+resource "aws_vpc_security_group_egress_rule" "lb_to_backend" {
+
+  security_group_id = aws_security_group.load_balancer.id
+
+  from_port = 8000
+
+  to_port = 8000
+
+  ip_protocol = "tcp"
+
+  referenced_security_group_id = aws_security_group.backend.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "backend_to_postgres" {
+
+  security_group_id = aws_security_group.backend.id
+
+  from_port = 5432
+
+  to_port = 5432
+
+  ip_protocol = "tcp"
+
+  referenced_security_group_id = aws_security_group.postgres.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "backend_to_redis" {
+
+  security_group_id = aws_security_group.backend.id
+
+  from_port = 6379
+
+  to_port = 6379
+
+  ip_protocol = "tcp"
+
+  referenced_security_group_id = aws_security_group.redis.id
 }
