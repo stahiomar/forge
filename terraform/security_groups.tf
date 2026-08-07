@@ -64,10 +64,10 @@ resource "aws_vpc_security_group_ingress_rule" "backend_from_lb" {
 
   from_port = 8000
 
-  to_port   = 8000
+  to_port = 8000
 
   ip_protocol = "tcp"
-  
+
   # That one means who initiates the connection, in this case the load balancer
   referenced_security_group_id = aws_security_group.load_balancer.id
 }
@@ -78,10 +78,10 @@ resource "aws_vpc_security_group_ingress_rule" "redis_from_backend" {
 
   from_port = 6379
 
-  to_port   = 6379
+  to_port = 6379
 
   ip_protocol = "tcp"
-  
+
   # That one means who initiates the connection, in this case the backend
   referenced_security_group_id = aws_security_group.backend.id
 }
@@ -92,10 +92,10 @@ resource "aws_vpc_security_group_ingress_rule" "postgres_from_backend" {
 
   from_port = 5432
 
-  to_port   = 5432
+  to_port = 5432
 
   ip_protocol = "tcp"
-  
+
   # That one means who initiates the connection, in this case the backend
   referenced_security_group_id = aws_security_group.backend.id
 }
