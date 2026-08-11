@@ -140,3 +140,9 @@ resource "aws_iam_role_policy_attachment" "backend_ecr" {
   role = aws_iam_role.backend.name
   policy_arn = aws_iam_policy.ecr.arn
 }
+
+# Instance Profile for the Backend role.
+resource "aws_iam_instance_profile" "backend" {
+  name = "${var.vpc_name}-${var.environment}-backend-instance-profile"
+  role = aws_iam_role.backend.name
+}
