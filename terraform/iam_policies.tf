@@ -65,7 +65,10 @@ data "aws_iam_policy_document" "backend_assume_role" {
     # not individual EC2 instances.
     ##########################################################
     principals {
-      "EC2 service"
+      # We trust a service, not a user or group.
+      type = "Service"
+      # We trust the EC2 Service to assume this role.
+      identifiers = ["ec2.amazonaws.com"]
     }
 
     # Placeholder.
@@ -137,7 +140,7 @@ resource "aws_iam_role" "backend" {
 
 # Attachment of the ECR policy to the Backend role.
 resource "aws_iam_role_policy_attachment" "backend_ecr" {
-  role = aws_iam_role.backend.name
+  role       = aws_iam_role.backend.name
   policy_arn = aws_iam_policy.ecr.arn
 }
 
