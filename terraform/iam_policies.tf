@@ -134,3 +134,9 @@ resource "aws_iam_role" "backend" {
   ############################################################
   assume_role_policy = data.aws_iam_policy_document.backend_assume_role.json
 }
+
+# Attachment of the ECR policy to the Backend role.
+resource "aws_iam_role_policy_attachment" "backend_ecr" {
+  role = aws_iam_role.backend.name
+  policy_arn = aws_iam_policy.ecr.arn
+}
