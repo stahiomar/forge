@@ -27,3 +27,14 @@ variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
   type        = string
 }
+
+variable "backend_ami_id" {
+  description = "AMI ID used by backend EC2 instances"
+  type        = string
+}
+
+variable "backend_instance_type" {
+  description = "EC2 instance type for backend instances"
+  type        = string
+  default     = "t3.micro"
+}
