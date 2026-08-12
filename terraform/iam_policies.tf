@@ -9,22 +9,32 @@
 ##############################################################
 
 data "aws_iam_policy_document" "ecr" {
-
   statement {
-
     effect = "Allow"
 
     # Placeholder.
     # Later this will become real AWS IAM actions.
     actions = [
-      "Read from ecr"
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer"
     ]
 
     # Placeholder.
     # Later this will reference our ECR Repository ARN.
     resources = [
-      "Forge Backend Repository"
+      aws_ecr_repository.backend.arn
     ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ecr:GetAuthorizationToken"
+    ]
+
+    resources = ["*"]
   }
 }
 
@@ -73,7 +83,7 @@ data "aws_iam_policy_document" "backend_assume_role" {
 
     # Placeholder.
     actions = [
-      "Assume Role"
+      "sts:AssumeRole"
     ]
   }
 }
@@ -106,24 +116,14 @@ resource "aws_iam_policy" "ecr" {
 ##############################################################
 # IAM ROLE
 #
-# A Role answers:
+# A Role represents an identity with a set of permissions.
 #
-# "Who should receive these permissions?"
+# Our Backend Role will eventually have permissions such as:
+# - Pull images from ECR
+# - Read application secrets
+# - Write/read CloudWatch resources
 #
-# Our Backend EC2 instances will eventually use
-# this role.
-#
-# IMPORTANT:
-#
-# The role DOES NOT automatically receive the ECR policy.
-#
-# Terraform will need another resource later that
-# explicitly attaches:
-#
-# ECR Policy
-#      │
-#      ▼
-# Backend Role
+# Backend EC2 instances will use this identity.
 ##############################################################
 
 resource "aws_iam_role" "backend" {
