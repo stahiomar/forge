@@ -18,4 +18,10 @@ resource "aws_autoscaling_group" "backend" {
     id      = aws_launch_template.backend.id
     version = "$Latest"
   }
+
+  # Automatically register the instances created by this ASG
+  # in the backend Target Group.
+  target_group_arns = [
+    aws_lb_target_group.backend.arn
+  ]
 }
