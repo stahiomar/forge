@@ -58,6 +58,20 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
   cidr_ipv4 = "0.0.0.0/0"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "http" {
+
+  security_group_id = aws_security_group.load_balancer.id
+
+  from_port = 80
+
+  to_port = 80
+
+  ip_protocol = "tcp"
+
+  # That one means who initiates the connection
+  cidr_ipv4 = "0.0.0.0/0"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "backend_from_lb" {
 
   security_group_id = aws_security_group.backend.id
