@@ -1,11 +1,20 @@
+# Content :
+# 1. Permission policy documents
+# 2. Trust policy document
+# 3. IAM policies
+# 4. IAM role
+# 5. Policy attachments
+# 6. Instance profile
+
 ##############################################################
 # IAM POLICY DOCUMENTS
 #
-# IMPORTANT:
-# aws_iam_policy_document DOES NOT create anything in AWS.
-#
-# It is only a Terraform helper that generates the JSON
-# required by IAM resources.
+# aws_iam_policy_document does NOT create anything in AWS.
+# It generates JSON that will later be used by IAM resources.
+##############################################################
+
+##############################################################
+# ECR PERMISSION POLICY DOCUMENT
 ##############################################################
 
 data "aws_iam_policy_document" "ecr" {
@@ -35,127 +44,13 @@ data "aws_iam_policy_document" "ecr" {
 }
 
 ##############################################################
-# Trust Policy
-#
-# This policy DOES NOT define permissions.
-#
-# It answers a completely different question:
-#
-# "Who is allowed to use (assume) this role?"
-#
-# In our case:
-#
-# EC2 Service
-#        │
-#        ▼
-# Backend Role
-#
-# Notice there is NO repository here.
-# There are NO ECR permissions here.
-#
-# This policy is ONLY about trust.
-##############################################################
-
-data "aws_iam_policy_document" "backend_assume_role" {
-
-  statement {
-
-    effect = "Allow"
-
-    # EC2 Service
-    # We trust the EC2 SERVICE,
-    # not individual EC2 instances.
-    ##########################################################
-    principals {
-      # We trust a service, not a user or group.
-      type = "Service"
-      # We trust the EC2 Service to assume this role.
-      identifiers = ["ec2.amazonaws.com"]
-    }
-
-    actions = [
-      "sts:AssumeRole"
-    ]
-  }
-}
-
-##############################################################
-# IAM POLICY
-#
-# This resource creates an IAM Policy in AWS.
-#
-# After Terraform applies,
-# AWS now has a policy called:
-#
-# Forge-dev-ecr-policy
-#
-# IMPORTANT:
-#
-# At this point nobody is using it yet.
-#
-# It is just sitting inside AWS waiting to be attached to a Role.
-##############################################################
-
-resource "aws_iam_policy" "ecr" {
-  name        = "${var.vpc_name}-${var.environment}-ecr-policy"
-  description = "IAM policy for accessing ECR"
-
-  # Generated JSON from the helper above.
-  policy = data.aws_iam_policy_document.ecr.json
-}
-
-##############################################################
-# IAM ROLE
-#
-# A Role represents an identity with a set of permissions.
-#
-# Our Backend Role will eventually have permissions such as:
-# - Pull images from ECR
-# - Read application secrets
-# - Write/read CloudWatch resources
-#
-# Backend EC2 instances will use this identity.
-##############################################################
-
-resource "aws_iam_role" "backend" {
-  name = "${var.vpc_name}-${var.environment}-backend-role"
-
-  # This tells AWS: "The EC2 Service is allowed to assume this role."
-  #
-  # This does NOT give ECR permissions.
-  #
-  # It ONLY defines who is allowed to use the role.
-  ############################################################
-  assume_role_policy = data.aws_iam_policy_document.backend_assume_role.json
-}
-
-# Attachment of the ECR policy to the Backend role.
-resource "aws_iam_role_policy_attachment" "backend_ecr" {
-  role       = aws_iam_role.backend.name
-  policy_arn = aws_iam_policy.ecr.arn
-}
-
-# Instance Profile for the Backend role.
-resource "aws_iam_instance_profile" "backend" {
-  name = "${var.vpc_name}-${var.environment}-backend-instance-profile"
-  role = aws_iam_role.backend.name
-}
-
-
-
-
-##############################################################
-# Secrets Manager IAM Policy Document
-#
-# This describes what the Backend Role is allowed to do
-# with the Forge backend secret.
+# SECRETS MANAGER PERMISSION POLICY DOCUMENT
 ##############################################################
 
 data "aws_iam_policy_document" "secrets" {
   statement {
     effect = "Allow"
 
-    # The backend only needs to retrieve the actual value of the secret.
     actions = [
       "secretsmanager:GetSecretValue"
     ]
@@ -167,10 +62,43 @@ data "aws_iam_policy_document" "secrets" {
 }
 
 ##############################################################
-# Secrets Manager IAM Policy
+# TRUST POLICY DOCUMENT
 #
-# This creates the actual policy in AWS.
+# This answers:
+#
+# "WHO is allowed to assume the Backend Role?"
+#
+# It does NOT define what the role can access.
 ##############################################################
+
+data "aws_iam_policy_document" "backend_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = [
+      "sts:AssumeRole"
+    ]
+  }
+}
+
+
+##############################################################
+# IAM POLICIES
+#
+# These create actual IAM policies in AWS.
+##############################################################
+
+resource "aws_iam_policy" "ecr" {
+  name        = "${var.vpc_name}-${var.environment}-ecr-policy"
+  description = "IAM policy for accessing ECR"
+
+  policy = data.aws_iam_policy_document.ecr.json
+}
 
 resource "aws_iam_policy" "secrets" {
   name        = "${var.vpc_name}-${var.environment}-secrets-policy"
@@ -179,8 +107,61 @@ resource "aws_iam_policy" "secrets" {
   policy = data.aws_iam_policy_document.secrets.json
 }
 
-# Attach Secrets Manager Policy to Backend Role
+
+##############################################################
+# IAM ROLE
+#
+# The Backend Role is the identity used by backend EC2 instances.
+#
+# The trust policy determines WHO can assume the role.
+# Permission policies determine WHAT the role can access.
+##############################################################
+
+resource "aws_iam_role" "backend" {
+  name = "${var.vpc_name}-${var.environment}-backend-role"
+
+  assume_role_policy = data.aws_iam_policy_document.backend_assume_role.json
+}
+
+
+##############################################################
+# POLICY ATTACHMENTS
+#
+# These explicitly connect policies to the Backend Role.
+#
+# Backend Role
+#     │
+#     ├── ECR Policy
+#     └── Secrets Policy
+##############################################################
+
+resource "aws_iam_role_policy_attachment" "backend_ecr" {
+  role       = aws_iam_role.backend.name
+  policy_arn = aws_iam_policy.ecr.arn
+}
+
 resource "aws_iam_role_policy_attachment" "backend_secrets" {
   role       = aws_iam_role.backend.name
   policy_arn = aws_iam_policy.secrets.arn
+}
+
+
+##############################################################
+# INSTANCE PROFILE
+#
+# EC2 uses an Instance Profile to receive the Backend Role.
+#
+# Launch Template
+#       │
+#       ▼
+# Instance Profile
+#       │
+#       ▼
+# Backend Role
+##############################################################
+
+resource "aws_iam_instance_profile" "backend" {
+  name = "${var.vpc_name}-${var.environment}-backend-instance-profile"
+
+  role = aws_iam_role.backend.name
 }
