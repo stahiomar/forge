@@ -12,16 +12,12 @@ data "aws_iam_policy_document" "ecr" {
   statement {
     effect = "Allow"
 
-    # Placeholder.
-    # Later this will become real AWS IAM actions.
     actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
     ]
 
-    # Placeholder.
-    # Later this will reference our ECR Repository ARN.
     resources = [
       aws_ecr_repository.backend.arn
     ]
@@ -66,12 +62,8 @@ data "aws_iam_policy_document" "backend_assume_role" {
 
     effect = "Allow"
 
-    # Placeholder.
-    #
-    # Later this will become:
-    #
     # EC2 Service
-    # because we trust the EC2 SERVICE,
+    # We trust the EC2 SERVICE,
     # not individual EC2 instances.
     ##########################################################
     principals {
@@ -81,7 +73,6 @@ data "aws_iam_policy_document" "backend_assume_role" {
       identifiers = ["ec2.amazonaws.com"]
     }
 
-    # Placeholder.
     actions = [
       "sts:AssumeRole"
     ]
@@ -148,4 +139,48 @@ resource "aws_iam_role_policy_attachment" "backend_ecr" {
 resource "aws_iam_instance_profile" "backend" {
   name = "${var.vpc_name}-${var.environment}-backend-instance-profile"
   role = aws_iam_role.backend.name
+}
+
+
+
+
+##############################################################
+# Secrets Manager IAM Policy Document
+#
+# This describes what the Backend Role is allowed to do
+# with the Forge backend secret.
+##############################################################
+
+data "aws_iam_policy_document" "secrets" {
+  statement {
+    effect = "Allow"
+
+    # The backend only needs to retrieve the actual value of the secret.
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+
+    resources = [
+      aws_secretsmanager_secret.backend.arn
+    ]
+  }
+}
+
+##############################################################
+# Secrets Manager IAM Policy
+#
+# This creates the actual policy in AWS.
+##############################################################
+
+resource "aws_iam_policy" "secrets" {
+  name        = "${var.vpc_name}-${var.environment}-secrets-policy"
+  description = "IAM policy for accessing the Forge backend secret"
+
+  policy = data.aws_iam_policy_document.secrets.json
+}
+
+# Attach Secrets Manager Policy to Backend Role
+resource "aws_iam_role_policy_attachment" "backend_secrets" {
+  role       = aws_iam_role.backend.name
+  policy_arn = aws_iam_policy.secrets.arn
 }
