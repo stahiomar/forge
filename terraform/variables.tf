@@ -38,3 +38,8 @@ variable "backend_instance_type" {
   type        = string
   default     = "t3.micro"
 }
+
+variable "backend_image" {
+  description = "Docker image used by the Forge backend"
+  type        = string
+}

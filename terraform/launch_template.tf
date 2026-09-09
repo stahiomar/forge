@@ -17,4 +17,13 @@ resource "aws_launch_template" "backend" {
       aws_security_group.backend.id
     ]
   }
+
+  user_data = base64encode(templatefile(
+    "${path.module}/user_data/backend.sh",
+    {
+      backend_image = var.backend_image
+      aws_region    = var.aws_region
+
+    }
+  ))
 }
