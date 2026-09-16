@@ -20,9 +20,9 @@ spec:
       containers:
         - name: backend
 
-          image: forge-backend:latest
+          image: omarstahii/forge-backend:latest
+          imagePullPolicy: Always
 
-          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: backend-config
